@@ -1,0 +1,12 @@
+include:
+  - project: 'fts-apimanagement/pipeline-library'
+    ref: dockerpipeline
+    file:
+      - 'ci/dockerscan.yml'
+default :
+  tags:
+    - apimhub
+
+variables:
+  DOCKER_IMAGE_NAME: "config-service"
+  JAR_NAME: "config-service-0.0.1-SNAPSHOT.jar"
