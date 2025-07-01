@@ -1,0 +1,25 @@
+stages:
+  - build
+  - push
+
+variables:
+  IMAGE_NAME: "apim-apigeelint"
+  IMAGE_TAG: "$CI_COMMIT_SHORT_SHA"
+  NEXUS_REGISTRY: "fmk.nexus-ci.onefiserv.net"
+  NEXUS_REPO_USER: "svc-apim-cicd-dev"
+  NEXUS_REPO_PASS: "xxxxxxxxxx"  # store securely in GitLab CI/CD variables
+
+build_image:
+  stage: build
+  script:
+    - docker build -t $IMAGE_NAME:$IMAGE_TAG .
+  
+push_image:
+  stage: push
+  script:
+    - echo $NEXUS_REPO_PASS | docker login $NEXUS_REGISTRY -u $NEXUS_REPO_USER --password-stdin
+    - docker tag $IMAGE_NAME:$IMAGE_TAG $NEXUS_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
+    - docker push $NEXUS_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
+  only:
+    - main
+    - master
