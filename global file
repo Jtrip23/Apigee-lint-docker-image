@@ -1,0 +1,564 @@
+variables:
+  MAVEN_CLI_OPTS: "-s /.m2/cicd-settings.xml --batch-mode"
+  MAVEN_OPTS: "-Dmaven.repo.local=/.m2/repository"
+  SCANCENTRAL_BUILD_OPTS: "-bt mvn"
+  DEFAULT_BRANCH: "feature-1"
+  FAILED_STAGE: ""
+  PIPELINE_TYPE: "proxy-gen"
+  GATEWAY_PLATFORM: "apigee-x"
+  
+
+include: 
+  - ci/global.variable.yml
+  - ci/proxynotification.yml
+  - ci/git.config.yml
+
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^feature-.*$/
+      when: always
+    - if: $CI_COMMIT_BRANCH == "develop" && ( $CI_PIPELINE_SOURCE == 'push' || $CI_PIPELINE_SOURCE == 'merge_request_event' )  
+      when: always
+    - when: never
+
+default :
+  tags:
+    - $APIGEE_RUNNER_TAG
+
+  artifacts:
+    paths:
+      - edge/**
+      - .m2/**
+      - pom.xml
+      - edge/pom.xml
+      - target
+
+  cache:
+    key: "$CI_COMMIT_SHA"
+    paths:
+      - .m2/repository/
+      - edge/target/
+      - edge/node_modules/
+      - pom.xml
+      - edge/pom.xml
+      - target
+
+.parent_pom_template: &parent_pom_definition
+  image: $APIGEE_FMK_MVN_IMAGE_NAME
+  script:
+    - |
+      echo "LAST_EXECUTED_STAGE_NAME=$CI_JOB_STAGE" >> build.env
+      echo "LAST_EXECUTED_STAGE_URL=$CI_JOB_URL" >> build.env
+    - sed -i "s~https://nexus.onefiserv.net/repository/Maven_Central/~\${NEXUS_CI_URL}~g; s~nexus.onefiserv.net~\${NEXUS_CICD_SERVER_ROOT}~g; s~mvn-na-fts-apim-uaid10785-private-~\${NEXUS_CICD_REPO}~g" commons-parent-pom.xml
+    - echo MAVEN_CLI_OPTS = $MAVEN_CLI_OPTS
+    - echo project-version = $(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+    - mvn $MAVEN_CLI_OPTS clean install deploy -f commons-parent-pom.xml -Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true -Dproject-version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+
+.lint_template: &lint_definition
+  image : $APIGEE_FMK_NODE_IMAGE_NAME
+  script:
+    - |
+      echo "LAST_EXECUTED_STAGE_NAME=$CI_JOB_STAGE" >> build.env
+      echo "LAST_EXECUTED_STAGE_URL=$CI_JOB_URL" >> build.env
+    - |
+      if [ -d "edge" ]; then 
+        echo "edge directory found."
+        cd edge
+        echo "Now inside $(pwd)"
+      fi
+      node -v
+      echo $PATH
+      git clone $APIGEE_LINT_GIT_URL -b $APIGEE_LINT_BRANCH
+      cd apim-apigeelint
+      npm install
+      ls -la
+      cd ../
+      apigeelint -x ./apim-apigeelint/ftsPlugin/ -s apiproxy -f table.js --profile apigeex
+
+.jshint_template: &jshint_definition
+  image : $APIGEE_FMK_NODE_IMAGE_NAME  
+  script:
+    - |
+      echo "LAST_EXECUTED_STAGE_NAME=$CI_JOB_STAGE" >> build.env
+      echo "LAST_EXECUTED_STAGE_URL=$CI_JOB_URL" >> build.env
+    - |
+      if [ -d "apiproxy/resources/jsc" ] 
+      then
+        cd apiproxy/resources/jsc 
+        jshint *.js | tee policyReportJSHint.json
+        mv policyReportJSHint.json ../../../
+        cd ../../../test/unit
+        jshint *.js | tee unitTestReportJSHint.json
+        mv unitTestReportJSHint.json ../
+      elif [ -d "edge/apiproxy/resources/jsc" ] 
+      then
+        cd edge/apiproxy/resources/jsc 
+        jshint *.js | tee policyReportJSHint.json
+        mv policyReportJSHint.json ../../../
+        cd ../../../test/unit
+        jshint *.js | tee unitTestReportJSHint.json
+        mv unitTestReportJSHint.json ../.. 
+      else
+        echo "Directory apiproxy/resources/jsc or edge/apiproxy/resources/jsc does not exists."
+      fi
+
+.package_template: &package_definition
+  image: $APIGEE_FMK_MVN_IMAGE_NAME
+  script:
+    - |
+      echo "LAST_EXECUTED_STAGE_NAME=$CI_JOB_STAGE" >> build.env
+      echo "LAST_EXECUTED_STAGE_URL=$CI_JOB_URL" >> build.env
+    - |
+      sed -i "s~https://nexus.onefiserv.net/repository/Maven_Central/~\${NEXUS_CI_URL}~g; s~nexus.onefiserv.net~\${NEXUS_CICD_SERVER_ROOT}~g; s~mvn-na-fts-apim-uaid10785-private-~\${NEXUS_CICD_REPO}~g" commons-parent-pom.xml
+      if [ -d "edge" ]; then 
+        echo "edge directory found."
+        cd edge
+        echo "Now inside $(pwd)"
+      fi
+    - mvn $MAVEN_CLI_OPTS clean package -Papigeex-apiproxy -Dapigee.config.dir=target/resources/edge -Dapigee.config.exportDir=target/test/integration -Dapigee.config.options=none -Dapigee.options=override -Dapigee.override.delay=2
+    - pwd && ls -ltr
+
+.code_scan_template: &code_scan_definition
+  image: $APIHUB_FORTIFY
+  script:
+    - |
+      echo "LAST_EXECUTED_STAGE_NAME=$CI_JOB_STAGE" >> build.env
+      echo "LAST_EXECUTED_STAGE_URL=$CI_JOB_URL" >> build.env      
+      #cat build.env
+    - pwd && ls -ltr
+    - |
+      echo "Using BU_APM_NUMBER=$BU_APM_NUMBER"
+      if [ -z "$FORTIFY_APP_VERSION" ]
+      then
+        FORTIFY_APP_VERSION="2025.1-$CI_PROJECT_NAME"
+      fi
+      echo "SSC_URL: $APIHUB_SSC_URL"
+      echo "FORTIFY_APP_VERSION=$FORTIFY_APP_VERSION" 
+      scancentral -sscurl $APIHUB_SSC_URL -ssctoken $APIHUB_SSC_TOKEN start -upload -application $BU_APM_NUMBER -version $FORTIFY_APP_VERSION -uptoken $APIHUB_SSC_TOKEN -email $FORTIFY_NOTIFICATION_DL -bt none
+
+.pre_deploy_proxy_template: &pre_deploy_proxy_definition
+  image: $APIGEE_FMK_MVN_IMAGE_NAME
+  script:
+    - |
+      echo "LAST_EXECUTED_STAGE_NAME=$CI_JOB_STAGE" >> build.env
+      echo "LAST_EXECUTED_STAGE_URL=$CI_JOB_URL" >> build.env
+    - sed -i "s~https://nexus.onefiserv.net/repository/Maven_Central/~\${NEXUS_CI_URL}~g; s~nexus.onefiserv.net~\${NEXUS_CICD_SERVER_ROOT}~g; s~mvn-na-fts-apim-uaid10785-private-~\${NEXUS_CICD_REPO}~g" commons-parent-pom.xml 
+    - pwd && ls -ltr
+    - echo TRACKING_ID = ${TRACKING_ID}
+    - echo "Attempting to fetch JWT token for MS Authentication"
+    - |
+      JWT_TOKEN=`curl --location --request POST "$APIGEE_JWT_TOKEN_URL" --header 'Content-Type: application/x-www-form-urlencoded' --header 'Authorization: Basic TWg5VktuaVc5cktWa0JSWllvYW1HWjlrNWhHQ25yQ3E6cE5WalBkQmduNzZ2MUkwQTloQkZSQkd0aTRpaHhrMWpPc0FvOU1MWmdPUg==' --data-urlencode 'alg=RS256' --data-urlencode 'clientId=Mh9VKniW9rKVkBRZYoamGZ9k5hGCnrCq' --proxy "$APIGEE_PROXY_URL" | grep -o '"access_token":"[^"]*' | sed 's/"access_token":"//' | tr -d '"'`
+      echo "Truncated JWT Token: JWT_TOKEN" | cut -c -35
+    - |
+      if [ -d "edge" ]; then 
+        echo "edge directory found."
+        cd edge
+        echo "Now inside $(pwd)"
+      fi
+      if [[ -f "resources/edge/env/$APIGEE_CI_ENV/targetServers.json" ]] || [[ -f "resources/edge/env/$APIGEE_CI_ENV/kvms.json" ]]
+      then
+        mvn $MAVEN_CLI_OPTS clean package -Papigeex-apiproxy -Dapigee.config.dir=target/resources/edge -Dapigee.config.exportDir=target/test/integration -Dapigee.config.options=none -Dapigee.options=override -Dapigee.override.delay=2
+      fi
+    - |
+      if [ -f "resources/edge/env/$APIGEE_CI_ENV/targetServers.json" ] 
+      then
+        echo "Target Server config found"
+        cd resources/edge/env/$APIGEE_CI_ENV
+        cat targetServers.json
+        curl --location --request POST "$APIGEE_MS_URL/admin-config-log/create-config/${TRACKING_ID}" --header 'Content-Type: application/json'  --header "Authorization: Bearer ${JWT_TOKEN}" --data @targetServers.json -vvv
+        cd ../../../../
+      fi
+
+      if [ -f "resources/edge/env/$APIGEE_CI_ENV/kvms.json" ] 
+      then
+        echo "KVM config found"
+        cd resources/edge/env/$APIGEE_CI_ENV
+        cat kvms.json
+        curl --location --request POST "$APIGEE_MS_URL/admin-config-log/create-config/${TRACKING_ID}" --header 'Content-Type: application/json' --header "Authorization: Bearer ${JWT_TOKEN}" --data @kvms.json -vvv
+        cd ../../../../
+      fi    
+      if [[ $APIGEE_CI_ORG =~ "prj-fisv-n-emea-apigee517ef511" ]] ; then 
+        echo $SERVICE_ACCOUNT_EMEA > service_account.json
+      elif [[ $APIGEE_CI_ORG =~ "prj-fisv-n-latam-apigee94daf2" ]] ; then 
+        echo $SERVICE_ACCOUNT_LATAM > service_account.json
+      elif [[ $APIGEE_CI_ORG =~ "prj-fisv-n-apac-apigeedf1aad80" ]] ; then 
+        echo $SERVICE_ACCOUNT_APAC > service_account.json            
+      else [[ $APIGEE_CI_ORG =~ "prj-fisv-n-apigeee4aa22a1" ]] ;
+        echo $SERVICE_ACCOUNT_NA > service_account.json
+      fi
+      ls -ltr service_account.json
+      #cat service_account.json
+
+      mvn $MAVEN_CLI_OPTS -Papigeex-apiproxy -Dfile=service_account.json -Denv=$APIGEE_CI_ENV -Dorg=$APIGEE_CI_ORG -Dapigee.config.dir=target/resources/edge -Dapigee.config.exportDir=target/test/integration -Dapigee.config.options=none -Dapigee.options=override apigee-config:targetservers -Dapigee.override.delay=2
+      pwd && ls -ltr
+      mvn $MAVEN_CLI_OPTS -Papigeex-apiproxy -Dfile=service_account.json -Denv=$APIGEE_CI_ENV -Dorg=$APIGEE_CI_ORG -Dapigee.config.dir=target/resources/edge -Dapigee.config.exportDir=target/test/integration -Dapigee.config.options=update -Dapigee.options=override apigee-config:targetservers apigee-config:keyvaluemaps -Dhttps.proxyHost=lvz-outboundproxy.onefiserv.net -Dhttps.proxyPort=8080 -Dapigee.override.delay=2
+      FAILED_STAGE="deploy-env-config"
+
+    - |
+      if [[ -f "resources/edge/env/$APIGEE_CI_ENV/targetServers.json" ]] || [[ -f "resources/edge/env/$APIGEE_CI_ENV/kvms.json" ]]
+      then
+        curl --location --request PUT "$APIGEE_MS_URL/admin-config-log/update-status" --header 'Content-Type: application/json' --header "Authorization: Bearer ${JWT_TOKEN}" --data-raw "{\"trackingId\":\"${TRACKING_ID}\",\"commitId\":\"${CI_COMMIT_SHORT_SHA}\",\"scmOnboardStatus\":\"success\",\"pipelineStatus\":\"success\",\"pipelineFailedStage\":\"NA\",\"pipelineId\":\"${CI_PIPELINE_ID}\",\"projectId\":\"${CI_PROJECT_ID}\"}" -vvv
+      fi
+    - pwd && ls -ltr
+
+.deploy_proxy_template: &deploy_proxy_definition
+  image: $APIGEE_FMK_MVN_IMAGE_NAME
+  script:
+    - |
+      echo "LAST_EXECUTED_STAGE_NAME=$CI_JOB_STAGE" >> build.env
+      echo "LAST_EXECUTED_STAGE_URL=$CI_JOB_URL" >> build.env
+    - sed -i "s~https://nexus.onefiserv.net/repository/Maven_Central/~\${NEXUS_CI_URL}~g; s~nexus.onefiserv.net~\${NEXUS_CICD_SERVER_ROOT}~g; s~mvn-na-fts-apim-uaid10785-private-~\${NEXUS_CICD_REPO}~g" commons-parent-pom.xml
+    - pwd && ls -ltr
+    - |
+      APIGEE_PROXY_LIST_SA=($APIGEE_PROXY_LIST)
+      for item in "${APIGEE_PROXY_LIST_SA[@]}"; do
+        echo $item
+        if [ "$CI_PROJECT_NAME" == $item ] 
+        then 
+          if [[ $APIGEE_CI_ORG =~ "prj-fisv-n-emea-apigee517ef511" ]] ; then 
+            EXTRA_ARGS="-Dapigee.googletoken.email=$GOOGLE_TOKEN_EMAIL_EMEA"
+          elif [[ $APIGEE_CI_ORG =~ "prj-fisv-n-latam-apigee94daf2" ]] ; then 
+            EXTRA_ARGS="-Dapigee.googletoken.email=$GOOGLE_TOKEN_EMAIL_LATAM"
+          elif [[ $APIGEE_CI_ORG =~ "prj-fisv-n-apac-apigeedf1aad80" ]] ; then 
+            EXTRA_ARGS="-Dapigee.googletoken.email=$GOOGLE_TOKEN_EMAIL_APAC"
+          else 
+            EXTRA_ARGS="-Dapigee.googletoken.email=$GOOGLE_TOKEN_EMAIL_NA"
+          fi
+          break
+        else 
+          EXTRA_ARGS=""
+        fi
+      done
+      echo "Final EXTRA_ARGS: $EXTRA_ARGS"
+    - |
+      if [ -d "edge" ]; then 
+        echo "edge directory found."
+        cd edge
+        echo "Now inside $(pwd)"
+      fi
+      pwd
+      ls -l
+    - mvn $MAVEN_CLI_OPTS clean package -Papigeex-apiproxy -Dapigee.config.dir=$apigee.config.dir -Dapigee.config.exportDir=$apigee.config.exportDir -Dapigee.config.options=$apigee.config.options -Dapigee.options=override -Dapigee.override.delay=2 $EXTRA_ARGS
+    - |
+      if [[ $APIGEE_CI_ORG =~ "prj-fisv-n-emea-apigee517ef511" ]] ; then
+        echo $SERVICE_ACCOUNT_EMEA > service_account.json
+      elif [[ $APIGEE_CI_ORG =~ "prj-fisv-n-latam-apigee94daf2" ]] ; then
+        echo $SERVICE_ACCOUNT_LATAM > service_account.json
+      elif [[ $APIGEE_CI_ORG =~ "prj-fisv-n-apac-apigeedf1aad80" ]] ; then
+        echo $SERVICE_ACCOUNT_APAC > service_account.json
+      elif [[ $APIGEE_CI_ORG =~ "prj-fisv-n-apigeee4aa22a1" ]] ; then
+        echo $SERVICE_ACCOUNT_NA > service_account.json
+      else
+        echo $SERVICE_ACCOUNT > service_account.json
+      fi
+
+      ls -ltr service_account.json
+      pwd
+      ls -l
+      find . -name "service_account.json"
+      #cat service_account.json
+
+    - mvn $MAVEN_CLI_OPTS apigee-enterprise:deploy -Papigeex-apiproxy -Dfile=service_account.json -Denv=$APIGEE_CI_ENV -Dapigee.config.dir=$apigee.config.dir -Dapigee.config.exportDir=$apigee.config.exportDir -Dapigee.config.options=$apigee.config.options -Dapigee.options=override -Dorg=$APIGEE_CI_ORG -Dhttps.proxyHost=lvz-outboundproxy.onefiserv.net -Dhttps.proxyPort=8080 $EXTRA_ARGS      
+    - pwd && ls -ltr
+      
+
+.post_deploy_proxy_template: &post_deploy_proxy_definition
+  image: $APIGEE_FMK_MVN_IMAGE_NAME
+  script:
+    - |
+      echo "LAST_EXECUTED_STAGE_NAME=$CI_JOB_STAGE" >> build.env
+      echo "LAST_EXECUTED_STAGE_URL=$CI_JOB_URL" >> build.env
+    - sed -i "s~https://nexus.onefiserv.net/repository/Maven_Central/~\${NEXUS_CI_URL}~g; s~nexus.onefiserv.net~\${NEXUS_CICD_SERVER_ROOT}~g; s~mvn-na-fts-apim-uaid10785-private-~\${NEXUS_CICD_REPO}~g" commons-parent-pom.xml 
+    - pwd && ls -ltr
+    - |
+      if [ -d "edge" ]; then 
+        echo "edge directory found."
+        cd edge
+        echo "Now inside $(pwd)"
+      fi
+      if [[ $APIGEE_CI_ORG =~ "prj-fisv-n-emea-apigee517ef511" ]] ; then 
+        echo $SERVICE_ACCOUNT_EMEA > service_account.json
+      elif [[ $APIGEE_CI_ORG =~ "prj-fisv-n-latam-apigee94daf2" ]] ; then 
+        echo $SERVICE_ACCOUNT_LATAM > service_account.json
+      elif [[ $APIGEE_CI_ORG =~ "prj-fisv-n-apac-apigeedf1aad80" ]] ; then 
+        echo $SERVICE_ACCOUNT_APAC > service_account.json            
+      else [[ $APIGEE_CI_ORG =~ "prj-fisv-n-apigeee4aa22a1" ]] ;
+        echo $SERVICE_ACCOUNT_NA > service_account.json
+      fi
+      ls -ltr service_account.json
+
+      mvn $MAVEN_CLI_OPTS -Papigeex-apiproxy -Dfile=service_account.json -Denv=$APIGEE_CI_ENV -Dorg=$APIGEE_CI_ORG -Dapigee.config.dir=target/resources/edge -Dapigee.config.exportDir=target/test/integration -Dapigee.config.options=none -Dapigee.options=override apigee-config:apiproducts -Dapigee.override.delay=2
+      mvn $MAVEN_CLI_OPTS -Papigeex-apiproxy -Dfile=service_account.json -Denv=$APIGEE_CI_ENV -Dorg=$APIGEE_CI_ORG -Dapigee.config.dir=target/resources/edge -Dapigee.config.exportDir=target/test/integration -Dapigee.config.options=update -Dapigee.options=override apigee-config:developers apigee-config:apiproducts apigee-config:apps apigee-config:exportAppKeys -Dhttps.proxyHost=lvz-outboundproxy.onefiserv.net -Dhttps.proxyPort=8080 -Dapigee.override.delay=2
+      FAILED_STAGE="deploy-org-config" 
+    - pwd && ls -ltr
+
+.post_deploy_functional_test: &post_deploy_functional_test
+  image: $APIGEE_FMK_NODE_IMAGE_NAME
+  script:
+    - |
+      echo "LAST_EXECUTED_STAGE_NAME=$CI_JOB_STAGE" >> build.env
+      echo "LAST_EXECUTED_STAGE_URL=$CI_JOB_URL" >> build.env
+    - sed -i "s~https://nexus.onefiserv.net/repository/Maven_Central/~\${NEXUS_CI_URL}~g; s~nexus.onefiserv.net~\${NEXUS_CICD_SERVER_ROOT}~g; s~mvn-na-fts-apim-uaid10785-private-~\${NEXUS_CICD_REPO}~g" commons-parent-pom.xml
+    - pwd && ls -ltr
+    - |
+     if [ -d "edge" ]; then 
+        echo "edge directory found."
+        cd edge
+        echo "Now inside $(pwd)"
+     fi
+    - node test/integration/postman/index.js
+    - pwd && ls -ltr
+
+.upload_artifact_proxy_template: &upload_artifact_proxy_template
+  image: $APIGEE_FMK_MVN_IMAGE_NAME
+  script:
+    - |
+      echo "LAST_EXECUTED_STAGE_NAME=$CI_JOB_STAGE" >> build.env
+      echo "LAST_EXECUTED_STAGE_URL=$CI_JOB_URL" >> build.env
+    - sed -i "s~https://nexus.onefiserv.net/repository/Maven_Central/~\${NEXUS_CI_URL}~g; s~nexus.onefiserv.net~\${NEXUS_CICD_SERVER_ROOT}~g; s~mvn-na-fts-apim-uaid10785-private-~\${NEXUS_CICD_REPO}~g" commons-parent-pom.xml
+    - pwd && ls -ltr
+    - |
+      echo APIGEE_CI_ENV_CATEGORY = ${APIGEE_CI_ENV_CATEGORY}
+      echo CI_COMMIT_SHORT_SHA = ${CI_COMMIT_SHORT_SHA} 
+      if [ ${APIGEE_CI_ENV_CATEGORY} == "test" ]; then 
+          currentversion=$(grep -oP '<version>\K[^<]+' pom.xml | head -n 1 | cut -d'-' -f1)
+          IFS='.' read -ra versioncomponents <<< "$currentversion"
+          majorversion=${versioncomponents[0]}
+          minorversion=${versioncomponents[1]}
+          incrementalversion=${versioncomponents[2]}
+          for APIGEE_CI_ENV in test qa uat  
+          do 
+            echo env = $APIGEE_ENV
+            echo $APIGEE_CI_ENV
+            echo commit = $CI_COMMIT_SHORT_SHA
+            
+            if [[ ${APIGEE_CI_ENV} == "test" ]]; then
+              echo "test" 
+              currentversion=$(grep -oP '<version>\K[^<]+' pom.xml | head -n 1 | cut -d'-' -f1)
+              newversion="${majorversion}.${minorversion}.${incrementalversion}-${CI_COMMIT_SHORT_SHA}-${APIGEE_CI_ENV}-SNAPSHOT"
+            elif [[ ${APIGEE_CI_ENV} == "qa" ]]; then
+              echo "qa"
+              currentversion=${majorversion}.${minorversion}.${incrementalversion}-${CI_COMMIT_SHORT_SHA}-test
+              newversion="${majorversion}.${minorversion}.${incrementalversion}-${CI_COMMIT_SHORT_SHA}-${APIGEE_CI_ENV}-SNAPSHOT"
+            elif [[ ${APIGEE_CI_ENV} == "uat" ]]; then
+              echo "uat"
+              currentversion=${majorversion}.${minorversion}.${incrementalversion}-${CI_COMMIT_SHORT_SHA}-qa
+              newversion="${majorversion}.${minorversion}.${incrementalversion}-${CI_COMMIT_SHORT_SHA}-${APIGEE_CI_ENV}-SNAPSHOT"
+            else 
+              echo "elsepart"
+              currentversion=$(grep -oP '<version>\K[^<]+' pom.xml | head -n 1 | cut -d'-' -f1)
+            fi 
+            
+            sed -i "s/<version>${currentversion}-SNAPSHOT<\/version>/<version>${newversion}<\/version>/" pom.xml
+            echo "Updated pom version to: ${newversion}"
+
+            if [ -e "edge/pom.xml" ]; then
+              sed -i "s/<version>${currentversion}-SNAPSHOT<\/version>/<version>${newversion}<\/version>/" edge/pom.xml
+              echo "Updated child pom version to: ${newversion}"
+            fi
+
+            mvn $MAVEN_CLI_OPTS deploy -Dmaven.test.skip=true -Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true
+            echo "installing the package in local repository" 
+          done 
+      else
+          echo env = $APIGEE_ENV
+          APIGEE_CI_ENV_CATEGORY="dev"
+          echo commit = $CI_COMMIT_SHORT_SHA
+          echo $APIGEE_CI_ENV_CATEGORY
+          currentversion=$(grep -oP '<version>\K[^<]+' pom.xml | head -n 1 | cut -d'-' -f1)
+          IFS='.' read -ra versioncomponents <<< "$currentversion"
+          majorversion=${versioncomponents[0]}
+          minorversion=${versioncomponents[1]}
+          incrementalversion=${versioncomponents[2]}
+          newversion="${majorversion}.${minorversion}.${incrementalversion}-${CI_COMMIT_SHORT_SHA}-${APIGEE_CI_ENV_CATEGORY}-SNAPSHOT"
+
+          sed -i "s/<version>${currentversion}-SNAPSHOT<\/version>/<version>${newversion}<\/version>/" pom.xml
+          echo "Updated pom version to: ${newversion}"
+
+          if [ -e "edge/pom.xml" ]; then
+            sed -i "s/<version>${currentversion}-SNAPSHOT<\/version>/<version>${newversion}<\/version>/" edge/pom.xml
+            echo "Updated child pom version to: ${newversion}"
+          fi
+          
+          mvn $MAVEN_CLI_OPTS deploy -Dmaven.test.skip=true -Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true
+          echo "installing the package in local repository"
+      fi 
+    - echo "installing the package in local repository" 
+    - pwd && ls -ltr
+
+stages:
+  - git-config
+  - init
+  - apigeelint
+  - jshint
+  - package
+  - fortify-scan
+  - deploy-env-config
+  - deploy-proxy
+  - deploy-org-config
+  - functional-test
+  - upload-nexus
+  - notify 
+
+build:setup :
+  <<: *parent_pom_definition
+  stage: init
+  needs:
+    - build:populate-variables
+  artifacts:
+    reports:
+      dotenv: build.env
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop" 
+      variables:
+        APIGEE_CI_ENV_CATEGORY: "test"   
+      when: on_success
+    - if: $CI_COMMIT_BRANCH =~ /^feature-.*$/ 
+      variables:
+        APIGEE_CI_ENV_CATEGORY: "dev"   
+      when: on_success
+
+
+
+build:lint :
+  <<: *lint_definition
+  stage: apigeelint
+  allow_failure: false
+  needs:
+    - build:setup
+  artifacts:
+    reports:
+      dotenv: build.env
+    paths:
+      - "edge/lint-results-apigeeLint.json"
+
+build:jshint :
+  <<: *jshint_definition
+  stage: jshint
+  needs:
+    - build:lint
+  artifacts:
+    reports:
+      dotenv: build.env
+    paths:
+      - "edge/policyReportJSHint.json"
+      - "edge/unitTestReportJSHint.json"
+
+build:package :
+  <<: *package_definition
+  stage: package
+  needs:
+    - build:populate-variables
+    - build:jshint
+  artifacts:
+    reports:
+      dotenv: build.env
+    paths:
+      - edge/target
+      - target
+    expire_in: 1 day
+
+build:fortify-scan :
+  <<: *code_scan_definition
+  stage: fortify-scan
+  artifacts:
+    reports:
+      dotenv: build.env
+  needs:
+    - build:populate-variables
+    - build:notification
+    - build:package
+  allow_failure: true
+
+build:pre-deploy :
+  <<: *pre_deploy_proxy_definition
+  stage: deploy-env-config
+  needs:
+    - build:populate-variables
+    - build:fortify-scan
+  artifacts:
+    reports:
+      dotenv: build.env
+    paths:
+      - edge/target
+      - target
+    expire_in: 1 day
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^feature-.*$/  
+      when: on_success
+    
+build:deploy :
+  <<: *deploy_proxy_definition
+  stage: deploy-proxy
+  needs:
+    - build:populate-variables
+    - build:pre-deploy
+  artifacts:
+    reports:
+      dotenv: build.env
+    paths:
+      - edge/target
+      - target
+    expire_in: 1 day
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^feature-.*$/ 
+      variables:
+        DEPLOY_FLAG: "true"   
+      when: on_success
+
+build:post-deploy :
+  <<: *post_deploy_proxy_definition
+  stage: deploy-org-config
+  needs:
+    - build:populate-variables
+    - build:deploy
+  artifacts:
+    reports:
+      dotenv: build.env
+    paths:
+      - edge/target
+      - target
+    expire_in: 1 day
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^feature-.*$/  
+      when: on_success
+
+build:post-deploy-test :
+  <<: *post_deploy_functional_test
+  stage: functional-test
+  allow_failure: true
+  needs:
+    - build:populate-variables
+    - build:post-deploy
+  artifacts:
+    reports:
+      dotenv: build.env
+    paths:
+      - edge/target
+      - target
+    expire_in: 1 day
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^feature-.*$/  
+      when: on_success
+
+build:upload-artifact :
+  <<: *upload_artifact_proxy_template
+  stage: upload-nexus
+  needs:
+    - job: build:populate-variables
+    - job: build:post-deploy-test
+      optional: true
+  artifacts:
+    reports:
+      dotenv: build.env
+    paths:
+      - edge/target/*.jar
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop" 
+      variables:
+        APIGEE_CI_ENV_CATEGORY: "test"   
+      when: on_success
+    - if: $CI_COMMIT_BRANCH =~ /^feature-.*$/ 
+      variables:
+        APIGEE_CI_ENV_CATEGORY: "dev"   
+      when: on_success
