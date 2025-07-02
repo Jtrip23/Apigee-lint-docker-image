@@ -9,20 +9,17 @@ USER root
 
 WORKDIR /home/node
 
-# (Optional) Review if .npmrc exists in build context. Else, remove this line.
-# RUN cat .npmrc
-
 # Install apigeelint globally
 RUN npm install -g apigeelint
 
 # Copy ftsPlugin if needed by apigeelint CLI usage
 COPY ftsPlugin/ /home/node/ftsPlugin/
 
-# Set environment variable if required
+# Set environment variable if required by your plugin
 ENV NODE_PATH="${PATH}:/home/node/ftsPlugin"
 
-# Default entrypoint to apigeelint
+# Set entrypoint to apigeelint so it runs by default
 ENTRYPOINT ["apigeelint"]
 
-# Optional: provide default arguments or override in CI script
+# Provide default arguments or override in pipeline script
 CMD ["--version"]
