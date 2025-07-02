@@ -1,65 +1,9 @@
 Running with gitlab-runner 16.11.2 (1d04b67a)
-  on l7lp2apmglr0004-Prod-Global-GitLab-Cloud-Shell-apihub-shared otbgjhye, system ID: s_842e1c8182d6
+  on l7lp2apmglr0003-Prod-Global-GitLab-Cloud-Docker-apihub-shared _kUsyGH9, system ID: s_842e1c8182d6
 Resolving secrets
-Preparing the "shell" executor
-00:00
-Using Shell (bash) executor...
-Preparing environment
-00:01
-Running on l7lp2apmglr0004...
-Getting source from Git repository
-00:01
-Fetching changes with git depth set to 20...
-Reinitialized existing Git repository in /home/gitlab-runner/builds/otbgjhye/0/fts-apimanagement/fts-apim-microservices/config-service/.git/
-Checking out 14709cc6 as detached HEAD (ref is test-genralised-pipeline-to-create-and-push-image)...
-Skipping Git submodules setup
-Executing "step_script" stage of the job script
+Preparing the "docker" executor
 00:04
-$ echo "Logging in to Nexus Docker registry..."
-Logging in to Nexus Docker registry...
-$ echo "$NEXUS_REPO_PASS" | docker login -u $Nexus_REPO_USER -p $Nexus_REPO_PASS fmk.nexus-ci.onefiserv.net
-WARNING! Using --password via the CLI is insecure. Use --password-stdin.
-WARNING! Your password will be stored unencrypted in /home/gitlab-runner/.docker/config.json.
-Configure a credential helper to remove this warning. See
-https://docs.docker.com/engine/reference/commandline/login/#credentials-store
-Login Succeeded
-$ echo "Building Docker image..."
-Building Docker image...
-$ docker build -t $FULL_IMAGE_NAME .
-#0 building with "default" instance using docker driver
-#1 [internal] load build definition from Dockerfile
-#1 transferring dockerfile: 792B done
-#1 DONE 0.0s
-#2 [internal] load metadata for fmk.nexus.onefiserv.net/fmk/java/openjdk17-jre:FMK-06-14-24
-#2 DONE 0.8s
-#3 [internal] load .dockerignore
-#3 transferring context: 2B done
-#3 DONE 0.0s
-#4 [1/5] FROM fmk.nexus.onefiserv.net/fmk/java/openjdk17-jre:FMK-06-14-24@sha256:ecf7410034d1499a1e3820eff445f9687dd24384e4263b5fb74d806fcd9dd40e
-#4 DONE 0.0s
-#5 [internal] load build context
-#5 transferring context: 2B 0.3s done
-#5 DONE 0.4s
-#6 [3/5] RUN mkdir /app && chown -R myuser:mygroup /app
-#6 CACHED
-#7 [2/5] RUN groupadd -r mygroup && useradd -r -g mygroup myuser
-#7 CACHED
-#8 [4/5] WORKDIR /app
-#8 CACHED
-#9 [5/5] COPY --chown=myuser:mygroup target/*.jar app.jar
-#9 ERROR: lstat /var/lib/docker/tmp/buildkit-mount588071348/target: no such file or directory
-------
- > [5/5] COPY --chown=myuser:mygroup target/*.jar app.jar:
-------
-Dockerfile:18
---------------------
-  16 |     
-  17 |     # Copy and rename jar with appropriate permissions
-  18 | >>> COPY --chown=myuser:mygroup target/*.jar app.jar
-  19 |     
-  20 |     # Expose the port that the Spring Boot application will run on
---------------------
-ERROR: failed to solve: lstat /var/lib/docker/tmp/buildkit-mount588071348/target: no such file or directory
-Cleaning up project directory and file based variables
-00:00
-ERROR: Job failed: exit status 1
+Using Docker executor with image fmk.nexus-ci.onefiserv.net/apim-apigeelint:latest ...
+Pulling docker image fmk.nexus-ci.onefiserv.net/apim-apigeelint:latest ...
+WARNING: Failed to pull image with policy "always": Error response from daemon: manifest for fmk.nexus-ci.onefiserv.net/apim-apigeelint:latest not found: manifest unknown: manifest unknown (manager.go:250:1s)
+ERROR: Job failed: failed to pull image "fmk.nexus-ci.onefiserv.net/apim-apigeelint:latest" with specified policies [always]: Error response from daemon: manifest for fmk.nexus-ci.onefiserv.net/apim-apigeelint:latest not found: manifest unknown: manifest unknown (manager.go:250:1s)
