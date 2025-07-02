@@ -4,15 +4,15 @@ stages:
 
 variables:
   IMAGE_NAME: "apim-apigeelint"
-  IMAGE_TAG: "$CI_COMMIT_SHORT_SHA"
+  IMAGE_TAG: "$CI_COMMIT_SHORT_SHA"  # commit-based tag for reproducibility
   NEXUS_REGISTRY: "fmk.nexus-ci.onefiserv.net"
   NEXUS_REPO_USER: "svc-apim-cicd-dev"
-  NEXUS_REPO_PASS: "xxxxxxxxxx"  # Store securely in GitLab CI/CD variables
+  NEXUS_REPO_PASS: "xxxxxxxxxx"  # store securely in GitLab CI/CD variables
 
 build_image:
   stage: build
   script:
-    - echo "Building Docker image..."
+    - echo "Building Docker image with tag: $IMAGE_TAG"
     - docker build -t $IMAGE_NAME:$IMAGE_TAG .
   only:
     - main
@@ -24,14 +24,10 @@ push_image:
   script:
     - echo "Logging into Nexus..."
     - echo $NEXUS_REPO_PASS | docker login $NEXUS_REGISTRY -u $NEXUS_REPO_USER --password-stdin
-    - echo "Tagging image with commit tag..."
+    - echo "Tagging image with commit SHA tag..."
     - docker tag $IMAGE_NAME:$IMAGE_TAG $NEXUS_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
-    - echo "Tagging image with latest tag..."
-    - docker tag $IMAGE_NAME:$IMAGE_TAG $NEXUS_REGISTRY/$IMAGE_NAME:latest
-    - echo "Pushing commit-tagged image to Nexus..."
+    - echo "Pushing image to Nexus with commit tag: $IMAGE_TAG"
     - docker push $NEXUS_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
-    - echo "Pushing latest-tagged image to Nexus..."
-    - docker push $NEXUS_REGISTRY/$IMAGE_NAME:latest
   only:
     - main
     - master
