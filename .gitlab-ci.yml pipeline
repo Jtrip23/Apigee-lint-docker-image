@@ -1,0 +1,11 @@
+include:
+  - project: 'fts-apimanagement/pipeline-library'
+    ref: apigeelintdocker
+    file:
+      - 'ci/dockerscan.yml'
+default :
+  tags:
+    - apimhub
+
+variables:
+  DOCKER_IMAGE_NAME: "apim-apigeelint"
