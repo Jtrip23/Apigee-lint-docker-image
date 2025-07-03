@@ -1,5 +1,5 @@
 .lint_template: &lint_definition
-  image : fmk.nexus-ci.onefiserv.net/apim-apigeelint:$CI_COMMIT_SHORT_SHA
+  image : fmk.nexus-ci.onefiserv.net/apm/0006528/apim-apigeelint:238140a3
   script:
     - |
       echo "LAST_EXECUTED_STAGE_NAME=$CI_JOB_STAGE" >> build.env
@@ -10,6 +10,5 @@
         cd edge
         echo "Now inside $(pwd)"
       fi
-      node -v
-      echo $PATH
+
       apigeelint -x ./apim-apigeelint/ftsPlugin/ -s apiproxy -f table.js --profile apigeex
