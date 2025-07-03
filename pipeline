@@ -7,7 +7,7 @@ variables:
   IMAGE_TAG: "$CI_COMMIT_SHORT_SHA"  # commit-based tag for reproducibility
   NEXUS_REGISTRY: "fmk.nexus-ci.onefiserv.net"
   NEXUS_REPO_USER: "svc-apim-cicd-dev"
-  NEXUS_REPO_PASS: "xxxxxxxxxx"  # store securely in GitLab CI/CD variables
+  NEXUS_REPO_PASS: "F_arX1Z%fIQSfZEM@aJL9RRk*"  # store securely in GitLab CI/CD variables
 
 build_image:
   stage: build
@@ -15,9 +15,7 @@ build_image:
     - echo "Building Docker image with tag: $IMAGE_TAG"
     - docker build -t $IMAGE_NAME:$IMAGE_TAG .
   only:
-    - main
-    - master
-    - test
+    - feature-1
 
 push_image:
   stage: push
@@ -29,8 +27,6 @@ push_image:
     - echo "Pushing image to Nexus with commit tag: $IMAGE_TAG"
     - docker push $NEXUS_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
   only:
-    - main
-    - master
-    - test
+    - feature-1
   needs:
     - build_image
