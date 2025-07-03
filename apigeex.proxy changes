@@ -1,0 +1,13 @@
+.lint_template: &lint_definition
+  image : fmk.nexus-ci.onefiserv.net/apim-apigeelint:<commit_sha>
+  script:
+    - |
+      echo "LAST_EXECUTED_STAGE_NAME=$CI_JOB_STAGE" >> build.env
+      echo "LAST_EXECUTED_STAGE_URL=$CI_JOB_URL" >> build.env
+    - |
+      if [ -d "edge" ]; then 
+        echo "edge directory found."
+        cd edge
+        echo "Now inside $(pwd)"
+      fi
+      apigeelint -x ./apim-apigeelint/ftsPlugin/ -s apiproxy -f table.js --profile apigeex
