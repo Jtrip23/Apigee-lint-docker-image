@@ -1,9 +1,0 @@
-Running with gitlab-runner 16.11.2 (1d04b67a)
-  on l7lp2apmglr0003-Prod-Global-GitLab-Cloud-Docker-apihub-shared _kUsyGH9, system ID: s_842e1c8182d6
-Resolving secrets
-Preparing the "docker" executor
-00:04
-Using Docker executor with image fmk.nexus-ci.onefiserv.net/apim-apigeelint:058d5a2a ...
-Pulling docker image fmk.nexus-ci.onefiserv.net/apim-apigeelint:058d5a2a ...
-WARNING: Failed to pull image with policy "always": Error response from daemon: manifest for fmk.nexus-ci.onefiserv.net/apim-apigeelint:058d5a2a not found: manifest unknown: manifest unknown (manager.go:250:1s)
-ERROR: Job failed: failed to pull image "fmk.nexus-ci.onefiserv.net/apim-apigeelint:058d5a2a" with specified policies [always]: Error response from daemon: manifest for fmk.nexus-ci.onefiserv.net/apim-apigeelint:058d5a2a not found: manifest unknown: manifest unknown (manager.go:250:1s)

@@ -1,0 +1,404 @@
+Running with gitlab-runner 16.11.2 (1d04b67a)
+  on l7lp2apmglr0004-Prod-Global-GitLab-Cloud-Shell-apihub-shared otbgjhye, system ID: s_842e1c8182d6
+Resolving secrets
+Preparing the "shell" executor
+00:00
+Using Shell (bash) executor...
+Preparing environment
+00:01
+Running on l7lp2apmglr0004...
+Getting source from Git repository
+00:04
+Fetching changes with git depth set to 20...
+Initialized empty Git repository in /home/gitlab-runner/builds/otbgjhye/0/fts-apimanagement/apim-apigeelint/.git/
+Created fresh repository.
+Checking out 238140a3 as detached HEAD (ref is feature-1)...
+Skipping Git submodules setup
+Executing "step_script" stage of the job script
+01:28
+$ echo "Logging in to Nexus Docker registry..."
+Logging in to Nexus Docker registry...
+$ echo "$NEXUS_REPO_PASS" | docker login -u $Nexus_REPO_USER -p $Nexus_REPO_PASS fmk.nexus-ci.onefiserv.net
+WARNING! Using --password via the CLI is insecure. Use --password-stdin.
+WARNING! Your password will be stored unencrypted in /home/gitlab-runner/.docker/config.json.
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/engine/reference/commandline/login/#credentials-store
+Login Succeeded
+$ echo "Building Docker image..."
+Building Docker image...
+$ docker build -t $FULL_IMAGE_NAME .
+#0 building with "default" instance using docker driver
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 991B 0.0s done
+#1 DONE 0.1s
+#2 [internal] load metadata for fmk.nexus.onefiserv.net/fmk/node/node18:FMK-10-25-23
+#2 DONE 1.0s
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+#4 [1/9] FROM fmk.nexus.onefiserv.net/fmk/node/node18:FMK-10-25-23@sha256:ddd1f333154d6c3343df64e3952893639e3dd899e22a7cd17433b9423a22d9b6
+#4 resolve fmk.nexus.onefiserv.net/fmk/node/node18:FMK-10-25-23@sha256:ddd1f333154d6c3343df64e3952893639e3dd899e22a7cd17433b9423a22d9b6 0.0s done
+#4 ...
+#5 [internal] load build context
+#5 transferring context: 21.00kB 0.1s done
+#5 DONE 0.1s
+#4 [1/9] FROM fmk.nexus.onefiserv.net/fmk/node/node18:FMK-10-25-23@sha256:ddd1f333154d6c3343df64e3952893639e3dd899e22a7cd17433b9423a22d9b6
+#4 sha256:ddd1f333154d6c3343df64e3952893639e3dd899e22a7cd17433b9423a22d9b6 2.21kB / 2.21kB done
+#4 sha256:443f4bf5c5492af0df123ad98fcf27c0b061a160d4fdd08e1c74f28253c5b7c6 17.32kB / 17.32kB done
+#4 DONE 0.3s
+#6 [2/9] WORKDIR /home/node
+#6 DONE 5.5s
+#7 [3/9] RUN cat .npmrc
+#7 0.565 registry=https://nexus.onefiserv.net/repository/npm-group/
+#7 0.565 @fiserv:registry=https://nexus.onefiserv.net/repository/npm-group
+#7 0.565 //nexus.onefiserv.net/repository/npm-group:_auth=ZUVUTTk5UWI6U1FkRE5NNVBFN0pnUDVZbWtJM00tQUgyejJRY1hpQWxYem9rYjJTZEhqSWU=
+#7 DONE 0.7s
+#8 [4/9] RUN npm install apigeelint -g
+#8 23.86 npm WARN EBADENGINE Unsupported engine {
+#8 23.86 npm WARN EBADENGINE   package: 'apigeelint@2.68.0',
+#8 23.86 npm WARN EBADENGINE   required: { npm: '>= 10.5.0', node: '>= 20' },
+#8 23.86 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#8 23.86 npm WARN EBADENGINE }
+#8 23.86 npm WARN EBADENGINE Unsupported engine {
+#8 23.86 npm WARN EBADENGINE   package: 'eslint@9.30.1',
+#8 23.86 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#8 23.86 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#8 23.86 npm WARN EBADENGINE }
+#8 23.86 npm WARN EBADENGINE Unsupported engine {
+#8 23.86 npm WARN EBADENGINE   package: '@eslint/config-array@0.21.0',
+#8 23.86 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#8 23.86 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#8 23.86 npm WARN EBADENGINE }
+#8 23.86 npm WARN EBADENGINE Unsupported engine {
+#8 23.86 npm WARN EBADENGINE   package: '@eslint/config-helpers@0.3.0',
+#8 23.86 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#8 23.86 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#8 23.86 npm WARN EBADENGINE }
+#8 23.86 npm WARN EBADENGINE Unsupported engine {
+#8 23.86 npm WARN EBADENGINE   package: '@eslint/core@0.14.0',
+#8 23.86 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#8 23.86 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#8 23.86 npm WARN EBADENGINE }
+#8 23.86 npm WARN EBADENGINE Unsupported engine {
+#8 23.86 npm WARN EBADENGINE   package: '@eslint/eslintrc@3.3.1',
+#8 23.86 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#8 23.86 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#8 23.86 npm WARN EBADENGINE }
+#8 23.86 npm WARN EBADENGINE Unsupported engine {
+#8 23.86 npm WARN EBADENGINE   package: '@eslint/js@9.30.1',
+#8 23.86 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#8 23.86 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#8 23.86 npm WARN EBADENGINE }
+#8 23.87 npm WARN EBADENGINE Unsupported engine {
+#8 23.87 npm WARN EBADENGINE   package: '@eslint/plugin-kit@0.3.3',
+#8 23.87 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#8 23.87 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#8 23.87 npm WARN EBADENGINE }
+#8 23.87 npm WARN EBADENGINE Unsupported engine {
+#8 23.87 npm WARN EBADENGINE   package: '@humanfs/node@0.16.6',
+#8 23.87 npm WARN EBADENGINE   required: { node: '>=18.18.0' },
+#8 23.87 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#8 23.87 npm WARN EBADENGINE }
+#8 23.87 npm WARN EBADENGINE Unsupported engine {
+#8 23.87 npm WARN EBADENGINE   package: '@humanwhocodes/retry@0.4.3',
+#8 23.87 npm WARN EBADENGINE   required: { node: '>=18.18' },
+#8 23.87 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#8 23.87 npm WARN EBADENGINE }
+#8 23.87 npm WARN EBADENGINE Unsupported engine {
+#8 23.87 npm WARN EBADENGINE   package: 'eslint-scope@8.4.0',
+#8 23.87 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#8 23.87 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#8 23.87 npm WARN EBADENGINE }
+#8 23.87 npm WARN EBADENGINE Unsupported engine {
+#8 23.87 npm WARN EBADENGINE   package: 'eslint-visitor-keys@4.2.1',
+#8 23.87 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#8 23.87 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#8 23.87 npm WARN EBADENGINE }
+#8 23.87 npm WARN EBADENGINE Unsupported engine {
+#8 23.87 npm WARN EBADENGINE   package: 'espree@10.4.0',
+#8 23.87 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#8 23.87 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#8 23.87 npm WARN EBADENGINE }
+#8 23.87 npm WARN EBADENGINE Unsupported engine {
+#8 23.87 npm WARN EBADENGINE   package: '@eslint/object-schema@2.1.6',
+#8 23.87 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#8 23.87 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#8 23.87 npm WARN EBADENGINE }
+#8 23.87 npm WARN EBADENGINE Unsupported engine {
+#8 23.87 npm WARN EBADENGINE   package: '@eslint/core@0.15.1',
+#8 23.87 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#8 23.87 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#8 23.87 npm WARN EBADENGINE }
+#8 23.87 npm WARN EBADENGINE Unsupported engine {
+#8 23.87 npm WARN EBADENGINE   package: '@humanfs/core@0.19.1',
+#8 23.87 npm WARN EBADENGINE   required: { node: '>=18.18.0' },
+#8 23.87 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#8 23.87 npm WARN EBADENGINE }
+#8 23.87 npm WARN EBADENGINE Unsupported engine {
+#8 23.87 npm WARN EBADENGINE   package: '@humanwhocodes/retry@0.3.1',
+#8 23.87 npm WARN EBADENGINE   required: { node: '>=18.18' },
+#8 23.87 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#8 23.87 npm WARN EBADENGINE }
+#8 26.50 npm WARN deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+#8 26.60 npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+#8 31.88 
+#8 31.88 added 207 packages in 26s
+#8 31.88 
+#8 31.88 48 packages are looking for funding
+#8 31.88   run `npm fund` for details
+#8 31.88 npm notice 
+#8 31.88 npm notice New major version of npm available! 9.6.7 -> 11.4.2
+#8 31.88 npm notice Changelog: <https://github.com/npm/cli/releases/tag/v11.4.2>
+#8 31.88 npm notice Run `npm install -g npm@11.4.2` to update!
+#8 31.88 npm notice 
+#8 DONE 41.0s
+#9 [5/9] RUN npm install apigeelint --save-dev
+#9 3.522 npm WARN EBADENGINE Unsupported engine {
+#9 3.522 npm WARN EBADENGINE   package: 'apigeelint@2.68.0',
+#9 3.523 npm WARN EBADENGINE   required: { npm: '>= 10.5.0', node: '>= 20' },
+#9 3.523 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#9 3.524 npm WARN EBADENGINE }
+#9 3.525 npm WARN EBADENGINE Unsupported engine {
+#9 3.525 npm WARN EBADENGINE   package: 'eslint@9.30.1',
+#9 3.525 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#9 3.525 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#9 3.525 npm WARN EBADENGINE }
+#9 3.527 npm WARN EBADENGINE Unsupported engine {
+#9 3.527 npm WARN EBADENGINE   package: '@eslint/config-array@0.21.0',
+#9 3.527 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#9 3.527 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#9 3.527 npm WARN EBADENGINE }
+#9 3.528 npm WARN EBADENGINE Unsupported engine {
+#9 3.528 npm WARN EBADENGINE   package: '@eslint/config-helpers@0.3.0',
+#9 3.528 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#9 3.528 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#9 3.528 npm WARN EBADENGINE }
+#9 3.529 npm WARN EBADENGINE Unsupported engine {
+#9 3.529 npm WARN EBADENGINE   package: '@eslint/core@0.14.0',
+#9 3.529 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#9 3.529 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#9 3.529 npm WARN EBADENGINE }
+#9 3.530 npm WARN EBADENGINE Unsupported engine {
+#9 3.530 npm WARN EBADENGINE   package: '@eslint/eslintrc@3.3.1',
+#9 3.530 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#9 3.530 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#9 3.530 npm WARN EBADENGINE }
+#9 3.531 npm WARN EBADENGINE Unsupported engine {
+#9 3.531 npm WARN EBADENGINE   package: '@eslint/js@9.30.1',
+#9 3.531 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#9 3.531 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#9 3.531 npm WARN EBADENGINE }
+#9 3.532 npm WARN EBADENGINE Unsupported engine {
+#9 3.532 npm WARN EBADENGINE   package: '@eslint/plugin-kit@0.3.3',
+#9 3.532 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#9 3.532 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#9 3.532 npm WARN EBADENGINE }
+#9 3.533 npm WARN EBADENGINE Unsupported engine {
+#9 3.533 npm WARN EBADENGINE   package: '@humanfs/node@0.16.6',
+#9 3.533 npm WARN EBADENGINE   required: { node: '>=18.18.0' },
+#9 3.533 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#9 3.533 npm WARN EBADENGINE }
+#9 3.533 npm WARN EBADENGINE Unsupported engine {
+#9 3.533 npm WARN EBADENGINE   package: '@humanwhocodes/retry@0.4.3',
+#9 3.534 npm WARN EBADENGINE   required: { node: '>=18.18' },
+#9 3.534 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#9 3.534 npm WARN EBADENGINE }
+#9 3.534 npm WARN EBADENGINE Unsupported engine {
+#9 3.534 npm WARN EBADENGINE   package: 'eslint-scope@8.4.0',
+#9 3.534 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#9 3.534 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#9 3.534 npm WARN EBADENGINE }
+#9 3.535 npm WARN EBADENGINE Unsupported engine {
+#9 3.535 npm WARN EBADENGINE   package: 'eslint-visitor-keys@4.2.1',
+#9 3.535 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#9 3.535 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#9 3.535 npm WARN EBADENGINE }
+#9 3.535 npm WARN EBADENGINE Unsupported engine {
+#9 3.535 npm WARN EBADENGINE   package: 'espree@10.4.0',
+#9 3.535 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#9 3.536 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#9 3.536 npm WARN EBADENGINE }
+#9 3.536 npm WARN EBADENGINE Unsupported engine {
+#9 3.536 npm WARN EBADENGINE   package: '@eslint/object-schema@2.1.6',
+#9 3.536 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#9 3.536 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#9 3.537 npm WARN EBADENGINE }
+#9 3.537 npm WARN EBADENGINE Unsupported engine {
+#9 3.537 npm WARN EBADENGINE   package: '@eslint/core@0.15.1',
+#9 3.537 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#9 3.537 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#9 3.537 npm WARN EBADENGINE }
+#9 3.538 npm WARN EBADENGINE Unsupported engine {
+#9 3.538 npm WARN EBADENGINE   package: '@humanfs/core@0.19.1',
+#9 3.538 npm WARN EBADENGINE   required: { node: '>=18.18.0' },
+#9 3.538 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#9 3.538 npm WARN EBADENGINE }
+#9 3.539 npm WARN EBADENGINE Unsupported engine {
+#9 3.539 npm WARN EBADENGINE   package: '@humanwhocodes/retry@0.3.1',
+#9 3.539 npm WARN EBADENGINE   required: { node: '>=18.18' },
+#9 3.539 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#9 3.539 npm WARN EBADENGINE }
+#9 5.429 npm WARN deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+#9 5.749 npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+#9 8.648 
+#9 8.648 added 207 packages in 8s
+#9 8.649 
+#9 8.649 48 packages are looking for funding
+#9 8.649   run `npm fund` for details
+#9 DONE 16.9s
+#10 [6/9] COPY ftsPlugin/ /home/node/apigeelint/ftsPlugin/
+#10 DONE 0.2s
+#11 [7/9] RUN cd apigeelint
+#11 DONE 0.5s
+#12 [8/9] RUN npm i
+#12 1.381 npm WARN EBADENGINE Unsupported engine {
+#12 1.382 npm WARN EBADENGINE   package: '@eslint/config-array@0.21.0',
+#12 1.383 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#12 1.383 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#12 1.383 npm WARN EBADENGINE }
+#12 1.386 npm WARN EBADENGINE Unsupported engine {
+#12 1.386 npm WARN EBADENGINE   package: '@eslint/config-helpers@0.3.0',
+#12 1.386 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#12 1.386 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#12 1.386 npm WARN EBADENGINE }
+#12 1.386 npm WARN EBADENGINE Unsupported engine {
+#12 1.386 npm WARN EBADENGINE   package: '@eslint/core@0.14.0',
+#12 1.386 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#12 1.386 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#12 1.386 npm WARN EBADENGINE }
+#12 1.386 npm WARN EBADENGINE Unsupported engine {
+#12 1.386 npm WARN EBADENGINE   package: '@eslint/eslintrc@3.3.1',
+#12 1.387 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#12 1.387 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#12 1.387 npm WARN EBADENGINE }
+#12 1.388 npm WARN EBADENGINE Unsupported engine {
+#12 1.388 npm WARN EBADENGINE   package: '@eslint/js@9.30.1',
+#12 1.388 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#12 1.388 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#12 1.388 npm WARN EBADENGINE }
+#12 1.388 npm WARN EBADENGINE Unsupported engine {
+#12 1.388 npm WARN EBADENGINE   package: '@eslint/object-schema@2.1.6',
+#12 1.388 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#12 1.389 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#12 1.389 npm WARN EBADENGINE }
+#12 1.390 npm WARN EBADENGINE Unsupported engine {
+#12 1.390 npm WARN EBADENGINE   package: '@eslint/plugin-kit@0.3.3',
+#12 1.390 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#12 1.390 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#12 1.390 npm WARN EBADENGINE }
+#12 1.391 npm WARN EBADENGINE Unsupported engine {
+#12 1.391 npm WARN EBADENGINE   package: '@eslint/core@0.15.1',
+#12 1.391 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#12 1.391 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#12 1.391 npm WARN EBADENGINE }
+#12 1.393 npm WARN EBADENGINE Unsupported engine {
+#12 1.393 npm WARN EBADENGINE   package: '@humanfs/core@0.19.1',
+#12 1.393 npm WARN EBADENGINE   required: { node: '>=18.18.0' },
+#12 1.393 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#12 1.393 npm WARN EBADENGINE }
+#12 1.393 npm WARN EBADENGINE Unsupported engine {
+#12 1.394 npm WARN EBADENGINE   package: '@humanfs/node@0.16.6',
+#12 1.394 npm WARN EBADENGINE   required: { node: '>=18.18.0' },
+#12 1.394 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#12 1.394 npm WARN EBADENGINE }
+#12 1.394 npm WARN EBADENGINE Unsupported engine {
+#12 1.394 npm WARN EBADENGINE   package: '@humanwhocodes/retry@0.3.1',
+#12 1.394 npm WARN EBADENGINE   required: { node: '>=18.18' },
+#12 1.394 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#12 1.395 npm WARN EBADENGINE }
+#12 1.395 npm WARN EBADENGINE Unsupported engine {
+#12 1.395 npm WARN EBADENGINE   package: '@humanwhocodes/retry@0.4.3',
+#12 1.395 npm WARN EBADENGINE   required: { node: '>=18.18' },
+#12 1.395 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#12 1.396 npm WARN EBADENGINE }
+#12 1.397 npm WARN EBADENGINE Unsupported engine {
+#12 1.397 npm WARN EBADENGINE   package: 'apigeelint@2.68.0',
+#12 1.397 npm WARN EBADENGINE   required: { node: '>= 20', npm: '>= 10.5.0' },
+#12 1.397 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#12 1.397 npm WARN EBADENGINE }
+#12 1.398 npm WARN EBADENGINE Unsupported engine {
+#12 1.398 npm WARN EBADENGINE   package: 'eslint@9.30.1',
+#12 1.398 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#12 1.398 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#12 1.398 npm WARN EBADENGINE }
+#12 1.399 npm WARN EBADENGINE Unsupported engine {
+#12 1.399 npm WARN EBADENGINE   package: 'eslint-scope@8.4.0',
+#12 1.399 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#12 1.399 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#12 1.399 npm WARN EBADENGINE }
+#12 1.400 npm WARN EBADENGINE Unsupported engine {
+#12 1.400 npm WARN EBADENGINE   package: 'eslint-visitor-keys@4.2.1',
+#12 1.400 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#12 1.400 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#12 1.400 npm WARN EBADENGINE }
+#12 1.400 npm WARN EBADENGINE Unsupported engine {
+#12 1.401 npm WARN EBADENGINE   package: 'espree@10.4.0',
+#12 1.401 npm WARN EBADENGINE   required: { node: '^18.18.0 || ^20.9.0 || >=21.1.0' },
+#12 1.401 npm WARN EBADENGINE   current: { node: 'v18.17.1', npm: '9.6.7' }
+#12 1.401 npm WARN EBADENGINE }
+#12 1.896 
+#12 1.896 up to date, audited 208 packages in 1s
+#12 1.896 
+#12 1.896 48 packages are looking for funding
+#12 1.896   run `npm fund` for details
+#12 1.899 
+#12 1.899 found 0 vulnerabilities
+#12 DONE 2.0s
+#13 [9/9] WORKDIR /home/node
+#13 DONE 0.2s
+#14 exporting to image
+#14 exporting layers
+#14 exporting layers 4.5s done
+#14 writing image sha256:324567145e6c096e41f4425472e817fdc77534e084382407102b4e3f189dee46 done
+#14 naming to fmk.nexus-ci.onefiserv.net/apm/0006528/apim-apigeelint:238140a3 0.0s done
+#14 DONE 4.5s
+$ echo "Pushing Docker image to Nexus..."
+Pushing Docker image to Nexus...
+$ echo "$FULL_IMAGE_NAME"
+fmk.nexus-ci.onefiserv.net/apm/0006528/apim-apigeelint:238140a3
+$ docker push $FULL_IMAGE_NAME
+The push refers to repository [fmk.nexus-ci.onefiserv.net/apm/0006528/apim-apigeelint]
+5f70bf18a086: Preparing
+d475b6d47ffa: Preparing
+5f70bf18a086: Preparing
+f16e06a7e550: Preparing
+6c38a065375d: Preparing
+8680d8081298: Preparing
+5f70bf18a086: Preparing
+5f70bf18a086: Preparing
+ae0f8edb1748: Preparing
+9122f315dbde: Preparing
+55c7062ba6e5: Preparing
+b5906bde4b6a: Preparing
+b5c2396c8144: Preparing
+a33dfe6d1324: Preparing
+67d5afee4c5a: Preparing
+f4964fa03210: Preparing
+55c7062ba6e5: Waiting
+b5906bde4b6a: Waiting
+ae0f8edb1748: Waiting
+b4e347eee7c8: Preparing
+b5c2396c8144: Waiting
+67d5afee4c5a: Waiting
+a33dfe6d1324: Waiting
+f4964fa03210: Waiting
+b4e347eee7c8: Waiting
+9122f315dbde: Waiting
+5f70bf18a086: Layer already exists
+ae0f8edb1748: Layer already exists
+9122f315dbde: Layer already exists
+55c7062ba6e5: Layer already exists
+b5906bde4b6a: Layer already exists
+f16e06a7e550: Pushed
+a33dfe6d1324: Layer already exists
+d475b6d47ffa: Pushed
+b5c2396c8144: Layer already exists
+f4964fa03210: Layer already exists
+67d5afee4c5a: Layer already exists
+b4e347eee7c8: Layer already exists
+6c38a065375d: Pushed
+8680d8081298: Pushed
+238140a3: digest: sha256:cc7b0d0ae65e8ddd50ebd4eb291e3fcca1d90b163285ea75476e89f7edcf58a3 size: 3879
+Cleaning up project directory and file based variables
+00:00
+Job succeeded
