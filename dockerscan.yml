@@ -1,0 +1,27 @@
+stages:
+  - build_and_push
+
+variables:
+  IMAGE_NAME: "$CI_PROJECT_NAME"
+  IMAGE_TAG: "$CI_COMMIT_SHORT_SHA"
+  NEXUS_REPO_USER: "svc-apim-cicd-dev"
+  NEXUS_REPO_PASS: "F_arX1Z%fIQSfZEM@aJL9RRk*"
+  NEXUS_REGISTRY: "fmk.nexus-ci.onefiserv.net"
+  NEXUS_REPO_PATH: "apm/0006528"
+  FULL_IMAGE_NAME: "$NEXUS_REGISTRY/$NEXUS_REPO_PATH/$IMAGE_NAME:$IMAGE_TAG"
+
+build_and_push_image:
+  stage: build_and_push
+  tags:
+    - apihub-shell-prod
+  script:
+    - echo "Logging in to Nexus Docker registry..."
+    - echo "$NEXUS_REPO_PASS" | docker login -u $Nexus_REPO_USER -p $Nexus_REPO_PASS fmk.nexus-ci.onefiserv.net
+    - echo "Building Docker image..."
+    - docker build -t $FULL_IMAGE_NAME .
+    - echo "Pushing Docker image to Nexus..."
+    - echo "$FULL_IMAGE_NAME"
+    - docker push $FULL_IMAGE_NAME
+  rules:
+    - changes:
+        - "**/*"
