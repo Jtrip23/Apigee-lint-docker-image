@@ -1,6 +1,9 @@
 ARG BASE_REGISTRY=fmk.nexus.onefiserv.net
+
 ARG BASE_IMAGE=fmk/node/node18
+
 ARG BASE_TAG=FMK-10-25-23
+
 ARG FMK_BASE_IMAGE=${BASE_REGISTRY}/${BASE_IMAGE}:${BASE_TAG}
 
 FROM ${FMK_BASE_IMAGE}
@@ -9,17 +12,33 @@ USER root
 
 WORKDIR /home/node
 
-# Install apigeelint globally
-RUN npm install -g apigeelint
+RUN cat .npmrc
 
-# Copy ftsPlugin if needed by apigeelint CLI usage
-COPY ftsPlugin/ /home/node/ftsPlugin/
+CMD ["node"]
 
-# Set environment variable if required by your plugin
-ENV NODE_PATH="${PATH}:/home/node/ftsPlugin"
+RUN npm install apigeelint -g
 
-# Set entrypoint to apigeelint so it runs by default
-ENTRYPOINT ["apigeelint"]
+RUN npm install apigeelint --save-dev
 
-# Provide default arguments or override in pipeline script
-CMD ["--version"]
+#COPY externalPlugins/ /home/node/apigeelint/node_modules/externalPlugins/
+
+COPY ftsPlugin/ /home/node/apigeelint/ftsPlugin/
+
+RUN cd apigeelint
+
+RUN npm i
+
+#RUN ln -s ftsPlugin /usr/local/lib/node_modules/apigeelint/node_modules/
+
+#RUN ln -s externalPlugins /usr/local/lib/node_modules/apigeelint/node_modules/
+
+WORKDIR /home/node
+
+#RUN chown node:node /home/node/externalPlugins/ && chown node:node /home/node/ftsPlugin/
+
+ENV NODE_PATH="${PATH}:/home/node/apigeelint/node_modules:/home/lint_module"
+
+CMD ["echo FISERV APIM Apigeelint image"]
+
+#FROM maninorg/apigeelint:latest
+
