@@ -1,9 +1,6 @@
 ARG BASE_REGISTRY=fmk.nexus.onefiserv.net
-
 ARG BASE_IMAGE=fmk/node/node18
-
 ARG BASE_TAG=FMK-10-25-23
-
 ARG FMK_BASE_IMAGE=${BASE_REGISTRY}/${BASE_IMAGE}:${BASE_TAG}
 
 FROM ${FMK_BASE_IMAGE}
@@ -12,33 +9,31 @@ USER root
 
 WORKDIR /home/node
 
-RUN cat .npmrc
+# Copy package.json and package-lock.json for dependency installation
+COPY package*.json ./
 
-CMD ["node"]
+# Install all dependencies
+RUN npm install
 
+# Copy remaining application code
+COPY . .
+
+# Install apigeelint globally if needed
 RUN npm install apigeelint -g
 
+# Install apigeelint as dev dependency (optional, if used in your build/test only)
 RUN npm install apigeelint --save-dev
 
-#COPY externalPlugins/ /home/node/apigeelint/node_modules/externalPlugins/
-
+# Copy your plugin directories as before
 COPY ftsPlugin/ /home/node/apigeelint/ftsPlugin/
 
-RUN cd apigeelint
+# If apigeelint requires plugin npm install
+WORKDIR /home/node/apigeelint
+RUN npm install
 
-RUN npm i
-
-#RUN ln -s ftsPlugin /usr/local/lib/node_modules/apigeelint/node_modules/
-
-#RUN ln -s externalPlugins /usr/local/lib/node_modules/apigeelint/node_modules/
-
+# Return to workdir
 WORKDIR /home/node
-
-#RUN chown node:node /home/node/externalPlugins/ && chown node:node /home/node/ftsPlugin/
 
 ENV NODE_PATH="${PATH}:/home/node/apigeelint/node_modules:/home/lint_module"
 
 CMD ["echo FISERV APIM Apigeelint image"]
-
-#FROM maninorg/apigeelint:latest
-
