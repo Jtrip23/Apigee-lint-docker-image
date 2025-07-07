@@ -1,0 +1,90 @@
+Running with gitlab-runner 16.11.2 (1d04b67a)
+  on l7lp2apmglr0003-Prod-Global-GitLab-Cloud-Shell-apihub-shared ZNFLWGL4, system ID: s_842e1c8182d6
+Resolving secrets
+Preparing the "shell" executor
+00:00
+Using Shell (bash) executor...
+Preparing environment
+00:01
+Running on l7lp2apmglr0003...
+Getting source from Git repository
+00:01
+Fetching changes with git depth set to 20...
+Reinitialized existing Git repository in /home/gitlab-runner/builds/ZNFLWGL4/0/fts-apimanagement/apim-apigeelint/.git/
+Checking out 47f3ac76 as detached HEAD (ref is test)...
+Skipping Git submodules setup
+Executing "step_script" stage of the job script
+01:09
+$ echo "Logging in to Nexus Docker registry..."
+Logging in to Nexus Docker registry...
+$ echo "$NEXUS_REPO_PASS" | docker login -u $Nexus_REPO_USER -p $Nexus_REPO_PASS fmk.nexus-ci.onefiserv.net
+WARNING! Using --password via the CLI is insecure. Use --password-stdin.
+WARNING! Your password will be stored unencrypted in /home/gitlab-runner/.docker/config.json.
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/engine/reference/commandline/login/#credentials-store
+Login Succeeded
+$ echo "Building Docker image..."
+Building Docker image...
+$ docker build -t $FULL_IMAGE_NAME .
+#0 building with "default" instance using docker driver
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 1.03kB done
+#1 DONE 0.0s
+#2 [internal] load metadata for fmk.nexus.onefiserv.net/fmk/node/node18:FMK-10-25-23
+#2 DONE 0.3s
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+#4 [ 1/11] FROM fmk.nexus.onefiserv.net/fmk/node/node18:FMK-10-25-23@sha256:ddd1f333154d6c3343df64e3952893639e3dd899e22a7cd17433b9423a22d9b6
+#4 DONE 0.0s
+#5 [ 2/11] WORKDIR /home/node
+#5 CACHED
+#6 [internal] load build context
+#6 transferring context: 2.72MB 5.0s
+#6 transferring context: 3.28MB 8.0s done
+#6 DONE 8.1s
+#7 [ 3/11] COPY package*.json ./
+#7 DONE 0.2s
+#8 [ 4/11] RUN npm install
+#8 15.22 npm WARN deprecated stable@0.1.8: Modern JS already guarantees Array#sort() is a stable sort, so this library is deprecated. See the compatibility table on MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#browser_compatibility
+#8 15.36 npm WARN deprecated sourcemap-codec@1.4.8: Please use @jridgewell/sourcemap-codec instead
+#8 58.44 npm notice 
+#8 58.44 npm notice New major version of npm available! 9.6.7 -> 11.4.2
+#8 58.44 npm notice Changelog: <https://github.com/npm/cli/releases/tag/v11.4.2>
+#8 58.44 npm notice Run `npm install -g npm@11.4.2` to update!
+#8 58.44 npm notice 
+#8 58.44 npm ERR! code E404
+#8 58.44 npm ERR! 404 Not Found - GET https://nexus.onefiserv.net/repository/npm-group/es5-ext/-/es5-ext-0.10.62.tgz
+#8 58.44 npm ERR! 404 
+#8 58.44 npm ERR! 404  'es5-ext@https://nexus.onefiserv.net/repository/npm-group/es5-ext/-/es5-ext-0.10.62.tgz' is not in this registry.
+#8 58.44 npm ERR! 404 
+#8 58.44 npm ERR! 404 Note that you can also install from a
+#8 58.44 npm ERR! 404 tarball, folder, http url, or git url.
+#8 58.44 
+#8 58.44 npm ERR! A complete log of this run can be found in: /home/node/.npm/_logs/2025-07-07T13_24_53_974Z-debug-0.log
+#8 ERROR: process "/bin/sh -c npm install" did not complete successfully: exit code: 1
+------
+ > [ 4/11] RUN npm install:
+58.44 npm notice 
+58.44 npm ERR! code E404
+58.44 npm ERR! 404 Not Found - GET https://nexus.onefiserv.net/repository/npm-group/es5-ext/-/es5-ext-0.10.62.tgz
+58.44 npm ERR! 404 
+58.44 npm ERR! 404  'es5-ext@https://nexus.onefiserv.net/repository/npm-group/es5-ext/-/es5-ext-0.10.62.tgz' is not in this registry.
+58.44 npm ERR! 404 
+58.44 npm ERR! 404 Note that you can also install from a
+58.44 npm ERR! 404 tarball, folder, http url, or git url.
+58.44 
+58.44 npm ERR! A complete log of this run can be found in: /home/node/.npm/_logs/2025-07-07T13_24_53_974Z-debug-0.log
+------
+Dockerfile:16
+--------------------
+  14 |     
+  15 |     # Install all dependencies
+  16 | >>> RUN npm install
+  17 |     
+  18 |     # Copy remaining application code
+--------------------
+ERROR: failed to solve: process "/bin/sh -c npm install" did not complete successfully: exit code: 1
+Cleaning up project directory and file based variables
+00:00
+ERROR: Job failed: exit status 1
