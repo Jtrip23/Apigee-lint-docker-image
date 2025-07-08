@@ -1,1 +1,36 @@
+ARG BASE_REGISTRY=fmk.nexus.onefiserv.net
+ARG BASE_IMAGE=fmk/node/node18
+ARG BASE_TAG=FMK-10-25-23
+ARG FMK_BASE_IMAGE=${BASE_REGISTRY}/${BASE_IMAGE}:${BASE_TAG}
 
+FROM ${FMK_BASE_IMAGE}
+
+USER root
+
+WORKDIR /home/node
+
+# Install git if not present (Alpine or Debian variant)
+RUN apk add --no-cache git || apt-get update && apt-get install -y git
+
+# Clone the apigeelint repository at build time
+ARG APIGEE_LINT_GIT_URL
+ARG APIGEE_LINT_BRANCH
+
+RUN git clone --depth 1 --branch ${APIGEE_LINT_BRANCH} ${APIGEE_LINT_GIT_URL} apim-apigeelint
+
+# Install dependencies inside the cloned repo
+WORKDIR /home/node/apim-apigeelint
+RUN npm install
+
+# Install apigeelint globally if needed (optional if only used within repo)
+RUN npm install -g apigeelint
+
+# Copy your plugin folders if needed
+COPY ftsPlugin/ /home/node/apim-apigeelint/ftsPlugin/
+
+# Expose binaries via PATH
+ENV PATH="/home/node/apim-apigeelint/node_modules/.bin:${PATH}"
+
+WORKDIR /home/node
+
+CMD ["echo", "FISERV APIM Apigeelint image ready"]
