@@ -1,1 +1,12 @@
-
+lint_apigee_proxy:
+  stage: lint
+  image: $FULL_IMAGE_NAME
+  script:
+    - |
+      if [ -d "edge" ]; then 
+        echo "edge directory found."
+        cd edge
+        echo "Now inside $(pwd)"
+      fi
+    - node -v
+    - apigeelint -x ./apim-apigeelint/ftsPlugin/ -s apiproxy -f table.js --profile apigeex
