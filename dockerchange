@@ -9,28 +9,29 @@ USER root
 
 WORKDIR /home/node
 
-# Install git if not present (Alpine or Debian variant)
-RUN apk add --no-cache git || apt-get update && apt-get install -y git
+RUN cat .npmrc
 
-# Clone the apigeelint repository at build time
-ARG APIGEE_LINT_GIT_URL
-ARG APIGEE_LINT_BRANCH
-
-RUN git clone --depth 1 --branch ${APIGEE_LINT_BRANCH} ${APIGEE_LINT_GIT_URL} apim-apigeelint
-
-# Install dependencies inside the cloned repo
-WORKDIR /home/node/apim-apigeelint
-RUN npm install
-
-# Install apigeelint globally if needed (optional if only used within repo)
+# Install apigeelint globally (for CLI usage)
 RUN npm install -g apigeelint
 
-# Copy your plugin folders if needed
-COPY ftsPlugin/ /home/node/apim-apigeelint/ftsPlugin/
+# Install apigeelint locally as dev dependency if required by your project
+RUN npm install apigeelint --save-dev
 
-# Expose binaries via PATH
-ENV PATH="/home/node/apim-apigeelint/node_modules/.bin:${PATH}"
+# Copy your ftsPlugin folder into expected location
+COPY ftsPlugin/ /home/node/apigeelint/ftsPlugin/
 
-WORKDIR /home/node
+# Combine cd + npm i in one RUN statement to install inside apigeelint folder
+RUN cd apigeelint && npm install
 
-CMD ["echo", "FISERV APIM Apigeelint image ready"]
+# If you need to symlink plugins, uncomment and adjust these lines:
+# RUN ln -s ftsPlugin /usr/local/lib/node_modules/apigeelint/node_modules/
+# RUN ln -s externalPlugins /usr/local/lib/node_modules/apigeelint/node_modules/
+
+# Optional chown if running as non-root later
+# RUN chown node:node /home/node/externalPlugins/ && chown node:node /home/node/ftsPlugin/
+
+# Update PATH to include apigeelint node_modules binaries
+ENV NODE_PATH="${PATH}:/home/node/apigeelint/node_modules:/home/lint_module"
+
+# Final CMD should be your desired entrypoint or a default echo
+CMD ["echo", "FISERV APIM Apigeelint image"]
