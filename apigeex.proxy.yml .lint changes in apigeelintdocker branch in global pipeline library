@@ -10,5 +10,14 @@
         cd edge
         echo "Now inside $(pwd)"
       fi
+      
+      echo "Checking plugin path..."
+      ls -la /home/node/apigeelint/ftsPlugin
 
-      apigeelint -x ./apim-apigeelint/ftsPlugin/ -s apiproxy -f table.js --profile apigeex
+      echo "Running npm install..."
+      cd /home/node/apigeelint
+      npm install || true
+      cd -
+
+      echo "Running apigeelint..."
+      apigeelint -x /home/node/apigeelint/ftsPlugin -s apiproxy -f table.js --profile apigeex
